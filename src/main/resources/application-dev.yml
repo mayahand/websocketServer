@@ -1,0 +1,10 @@
+server:
+  port: 9101
+
+spring:
+  profiles:
+    active: dev
+  data:
+    redis:
+      host: ymson.dynu.net
+      password: ghkdlxldA!12

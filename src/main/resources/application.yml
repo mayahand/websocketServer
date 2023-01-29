@@ -1,0 +1,17 @@
+server:
+  port: 9101
+
+spring:
+  profiles:
+    active: local
+  data:
+    redis:
+      host: ymson.dynu.net
+      password: ghkdlxldA!12
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enabled: false
+  freemarker:
+    cache: false

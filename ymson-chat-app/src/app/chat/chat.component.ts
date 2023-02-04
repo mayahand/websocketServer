@@ -4,7 +4,7 @@ import {
   ElementRef,
   ViewChild,
   Inject,
-  AfterContentChecked
+  AfterViewChecked
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Stomp, CompatClient } from '@stomp/stompjs';
@@ -19,7 +19,7 @@ import {environment} from "../../environments/environment";
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
-export class ChatComponent implements OnInit, AfterContentChecked{
+export class ChatComponent implements OnInit, AfterViewChecked{
   @ViewChild('messageScroller') messageScroller: ElementRef<HTMLElement>;
   messageScrollerObserver: ScrollerAbleHTMLElementObserver;
 
@@ -51,13 +51,9 @@ export class ChatComponent implements OnInit, AfterContentChecked{
     });
   }
 
-  ngAfterContentChecked() {
+  ngAfterViewChecked() {
     if(!!this.messageScroller && !this.messageScrollerObserver) {
       this.messageScrollerObserver = ScrollerAbleHTMLElementObserver.create(this.messageScroller);
-    }
-
-    if(!!this.currentChatRoom) {
-      this.currentChatRoom.messages.forEach(msg => msg.isRead = true);
     }
   }
 
@@ -80,6 +76,7 @@ export class ChatComponent implements OnInit, AfterContentChecked{
         let message = JSON.parse(data.body);
         _this.roomList.filter((room: ChatRoom) => room.id === message.chatRoom.id).forEach((room: ChatRoom) => {
           room.messages.push(message);
+          _this.markRead();
         });
       });
 
@@ -104,19 +101,38 @@ export class ChatComponent implements OnInit, AfterContentChecked{
           return;
         }
 
-        _this.roomList = message.data.map((room: { id: string; name: string; ownerId: string; memberIds: string[]; }) => {
-          const chatRoom: ChatRoom = new ChatRoom();
-          chatRoom.id = room.id;
-          chatRoom.name = room.name;
-          chatRoom.ownerId = room.ownerId;
-          chatRoom.memberIds = room.memberIds;
-          chatRoom.checkMember(_this.userId);
-          return chatRoom;
-        });
+        // 삭제된 방 동기화
+        _this.roomList = _this.roomList.filter(room => message.data.some((newRoom : {
+          id: string;
+          name: string;
+          ownerId: string;
+          memberIds: string[];
+        }) => {
+          if(room.id === newRoom.id) {
+            room.name = newRoom.name;
+            room.ownerId = newRoom.ownerId;
+            room.memberIds = newRoom.memberIds;
+            room.checkMember(_this.userId);
+          }
+          return room.id === newRoom.id
+        }));
 
-        if(!!_this.currentChatRoom){
-          _this.currentChatRoom = _this.roomList.find(room => room.id === _this.currentChatRoom!.id);
-        }
+        // 추가된 방 동기화
+        message.data.filter((newRoom : {
+          id: string;
+          name: string;
+          ownerId: string;
+          memberIds: string[];
+        }) => !_this.roomList.some(room => room.id === newRoom.id))
+          .forEach((room: { id: string; name: string; ownerId: string; memberIds: string[]; }) => {
+            const chatRoom: ChatRoom = new ChatRoom();
+            chatRoom.id = room.id;
+            chatRoom.name = room.name;
+            chatRoom.ownerId = room.ownerId;
+            chatRoom.memberIds = room.memberIds;
+            chatRoom.checkMember(_this.userId);
+            _this.roomList.push(chatRoom);
+          });
       });
 
       _this.stompClient.send('/pub/chat/rooms', {token:this.token});
@@ -146,6 +162,12 @@ export class ChatComponent implements OnInit, AfterContentChecked{
     }
     this.stompClient.send('/pub/chat/message', {}, JSON.stringify({roomId:roomId, token:this.token, message:message}));
     this.message = '';
+  }
+
+  markRead() {
+    if(!!this.currentChatRoom) {
+      this.currentChatRoom.messages.filter(msg => !msg.isRead).forEach(msg => msg.isRead = true);
+    }
   }
 
   drop(event: CdkDragDrop<string[]>, list: any[]) {

@@ -9,7 +9,7 @@
         <div cdkDropList class="sortable-list chatRoom" style="height: 100%;overflow-y: auto" (cdkDropListDropped)="drop($event, roomList)">
           <div cdkDrag *ngFor="let room of roomList" class="sortable-box">
             <label>
-              <input type="radio" name="roomIdRdo" [value]="room" [(ngModel)]="currentChatRoom" [disabled]="room.isMember == false" />
+              <input type="radio" name="roomIdRdo" [value]="room" [(ngModel)]="currentChatRoom" [disabled]="room.isMember == false" (change)="markRead()" />
               <span> {{room.name}}</span>
             </label>
             <span class="badge bg-primary rounded-pill">{{room.unreadCount()}}</span>

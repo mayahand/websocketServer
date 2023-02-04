@@ -1,4 +1,11 @@
-import {Component, OnInit, AfterViewInit, HostListener, ElementRef, ViewChild, Inject} from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ElementRef,
+  ViewChild,
+  Inject,
+  AfterContentChecked
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Stomp, CompatClient } from '@stomp/stompjs';
 import * as SockJS from "sockjs-client";
@@ -12,17 +19,17 @@ import {environment} from "../../environments/environment";
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
-export class ChatComponent implements OnInit{
+export class ChatComponent implements OnInit, AfterContentChecked{
   @ViewChild('messageScroller') messageScroller: ElementRef<HTMLElement>;
+  messageScrollerObserver: ScrollerAbleHTMLElementObserver;
 
   stompClient: CompatClient;
   userId: string;
   token: string;
   roomName: string;
   message: string;
-  messages: Message[] = [];
   roomList: ChatRoom[] = [];
-  chatRoomId: string | undefined;
+  currentChatRoom: ChatRoom | undefined;
   constructor(private route: ActivatedRoute,
               private authService: AuthService,
               public dialog: MatDialog) {
@@ -44,9 +51,13 @@ export class ChatComponent implements OnInit{
     });
   }
 
-  ngAfterViewInit() {
-    if(!!this.messageScroller) {
-      ScrollerAbleHTMLElementObserver.create(this.messageScroller);
+  ngAfterContentChecked() {
+    if(!!this.messageScroller && !this.messageScrollerObserver) {
+      this.messageScrollerObserver = ScrollerAbleHTMLElementObserver.create(this.messageScroller);
+    }
+
+    if(!!this.currentChatRoom) {
+      this.currentChatRoom.messages.forEach(msg => msg.isRead = true);
     }
   }
 
@@ -67,7 +78,9 @@ export class ChatComponent implements OnInit{
     _this.stompClient.connect({token:token}, () => {
       _this.stompClient.subscribe('/sub/chat/message/'+token, function (data) {
         let message = JSON.parse(data.body);
-        _this.messages.push(message);
+        _this.roomList.filter((room: ChatRoom) => room.id === message.chatRoom.id).forEach((room: ChatRoom) => {
+          room.messages.push(message);
+        });
       });
 
       _this.stompClient.subscribe('/sub/chat/rooms', function (data) {
@@ -75,7 +88,7 @@ export class ChatComponent implements OnInit{
 
         switch (message.messageType) {
           case 'ROOM_LEAVE': {
-            if(!message.targetRoom || message.targetRoom.id !== _this.chatRoomId) {
+            if(!message.targetRoom || !_this.currentChatRoom || message.targetRoom.id !== _this.currentChatRoom.id) {
               break;
             }
 
@@ -83,7 +96,7 @@ export class ChatComponent implements OnInit{
               break;
             }
 
-            _this.chatRoomId = undefined;
+            _this.currentChatRoom = undefined;
           }
         }
 
@@ -100,6 +113,10 @@ export class ChatComponent implements OnInit{
           chatRoom.checkMember(_this.userId);
           return chatRoom;
         });
+
+        if(!!_this.currentChatRoom){
+          _this.currentChatRoom = _this.roomList.find(room => room.id === _this.currentChatRoom!.id);
+        }
       });
 
       _this.stompClient.send('/pub/chat/rooms', {token:this.token});
@@ -111,9 +128,6 @@ export class ChatComponent implements OnInit{
   }
 
   leaveRoom(roomId: string) {
-    if(this.chatRoomId === roomId) {
-      this.chatRoomId = undefined;
-    }
     this.stompClient.send('/pub/chat/rooms/leave', {}, JSON.stringify({roomId:roomId, token:this.token}));
   }
 
@@ -155,8 +169,13 @@ class ChatRoom {
   ownerId: string = '';
   memberIds: string[] = [];
   isMember: boolean = false;
+  messages: Message[] = [];
   checkMember(userId: string) {
     this.isMember = this.memberIds.some(memberId => memberId === userId);
+  }
+
+  unreadCount() {
+    return this.messages.filter(m => !m.isRead).length;
   }
 }
 
@@ -164,6 +183,7 @@ class Message {
   userId: string;
   chatRoom: ChatRoom;
   data: any;
+  isRead: boolean = false;
 }
 
 // scrollToBottom

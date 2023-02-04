@@ -8,11 +8,11 @@ import lombok.Data;
 public class RoomInfo extends Message<String> {
     private String roomId;
     private String roomName;
-    private String userId;
+    private String token;
 
-    public RoomInfo(String roomName, String userId) {
+    public RoomInfo(String roomName, String token) {
         super(MessageType.ROOM_CREATE, roomName);
         this.roomName = roomName;
-        this.userId = userId;
+        this.token = token;
     }
 }

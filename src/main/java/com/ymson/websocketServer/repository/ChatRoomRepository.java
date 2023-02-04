@@ -32,4 +32,10 @@ public class ChatRoomRepository {
         chatRoomMap.put(chatRoom.getId(), chatRoom);
         return chatRoom;
     }
+
+    public ChatRoom deleteChatRoom(String roomId) {
+        ChatRoom deleteRom = findRoomById(roomId);
+        chatRoomMap.remove(roomId);
+        return deleteRom;
+    }
 }

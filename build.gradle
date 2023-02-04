@@ -21,9 +21,15 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'io.jsonwebtoken:jjwt:0.9.1'
+	implementation 'javax.xml.bind:jaxb-api:2.3.1'
+
+//	//DB
+//	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+//	implementation 'mysql:mysql-connector-java'
+//	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter'
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

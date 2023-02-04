@@ -6,8 +6,8 @@
     <div class="col-sm-5">
       <div class="container-sm" style="text-align: center;height: 100%">
         <input type="text" style="width: 80%" [(ngModel)]="roomName" /><button (click)="createRoom(roomName)">방생성</button><br/><br/>
-        <ul class="list-group" style="height: 100%;overflow-y: auto">
-          <li *ngFor="let room of roomList" class="list-group-item d-flex justify-content-between align-items-center">
+        <div cdkDropList class="sortable-list chatRoom" style="height: 100%;overflow-y: auto" (cdkDropListDropped)="drop($event, roomList)">
+          <div cdkDrag *ngFor="let room of roomList" class="sortable-box">
             <label>
               <input type="radio" name="roomIdRdo" [value]="room.id" [(ngModel)]="chatRoomId" [disabled]="room.isMember == false" />
               <span> {{room.name}}({{room.id}})</span>
@@ -15,13 +15,13 @@
             <span class="badge bg-primary rounded-pill">14</span>
             <button *ngIf="room.isMember == true" style="width: 60px;" (click)="leaveRoom(room.id)">leave</button>
             <button *ngIf="room.isMember == false" style="width: 60px;" (click)="joinRoom(room.id)">join</button>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
     </div>
     <div class="col-sm-5">
       <div class="container-sm" style="text-align: center;height: 100%">
-        <ul class="list-group" id="messageScroller" style="height: 500px;max-height: 500px;overflow-y: scroll" (scroll)="onElementScroll($event)">
+        <ul #messageScroller class="list-group" style="height: 500px;max-height: 500px;overflow-y: scroll">
           <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let msg of messages">[{{msg.chatRoom.name}}]{{msg.userId}}: {{msg.data}}</li>
         </ul>
         <br/>

@@ -15,3 +15,5 @@ spring:
       enabled: false
   freemarker:
     cache: false
+  jwt:
+    secret: 1q2w3e!@

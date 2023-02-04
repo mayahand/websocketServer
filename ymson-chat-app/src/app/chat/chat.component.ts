@@ -5,6 +5,7 @@ import * as SockJS from "sockjs-client";
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 import {AuthService} from "../auth/auth.service";
 import {MatDialog, MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {environment} from "../../environments/environment";
 
 @Component({
   selector: 'app-chat',
@@ -61,7 +62,7 @@ export class ChatComponent implements OnInit{
       return;
     }
 
-    const socket = new SockJS('http://localhost:9101/ws-stomp');
+    const socket = new SockJS(environment.chatApiDomain+'/ws-stomp');
     _this.stompClient = Stomp.over(socket);
     _this.stompClient.connect({token:token}, () => {
       _this.stompClient.subscribe('/sub/chat/message/'+token, function (data) {

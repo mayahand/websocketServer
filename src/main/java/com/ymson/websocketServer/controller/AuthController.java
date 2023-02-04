@@ -21,7 +21,6 @@ public class AuthController {
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
 
-    @CrossOrigin(origins = "http://localhost:4200", allowedHeaders = {"*"}, allowCredentials = "true")
     @PostMapping("/token")
     @ResponseBody
     public Token getToken(HttpServletResponse response,

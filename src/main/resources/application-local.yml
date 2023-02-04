@@ -6,6 +6,8 @@ spring:
     redis:
       host: ymson.dynu.net
       password: ghkdlxldA!12
+  jwt:
+    secret: 1q2w3e!@
   devtools:
     livereload:
       enabled: true
@@ -13,3 +15,7 @@ spring:
       enabled: false
   freemarker:
     cache: false
+
+data:
+  cors:
+    origins: http://localhost:4200, http://chat.ymson.ooguy.com

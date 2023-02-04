@@ -8,3 +8,7 @@ spring:
       password: ghkdlxldA!12
   jwt:
     secret: 1q2w3e!@
+
+data:
+  cors:
+    origins: http://chat.ymson.ooguy.com

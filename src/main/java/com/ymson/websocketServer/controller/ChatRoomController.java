@@ -29,32 +29,46 @@ public class ChatRoomController {
     }
 
     @MessageMapping("/chat/rooms/new")
-    public void newRoom(RoomInfo roomInfo) {
-        String userId = jwtTokenProvider.getUserIdFromToken(roomInfo.getToken());
+    public void newRoom(@Header("token") String token, RoomInfo roomInfo) {
+        String userId = jwtTokenProvider.getUserIdFromToken(token);
         ChatRoom chatRoom = chatRoomRepository.createChatRoom(roomInfo.getRoomName(), userId);
         messageSendingOperations.convertAndSend("/sub/chat/rooms", new RoomList(MessageType.ROOM_CREATE, chatRoom, chatRoomRepository.findAllRoom()));
     }
 
     @MessageMapping("/chat/rooms/join")
-    public void joinRooms(RoomInfo roomInfo) {
-        String userId = jwtTokenProvider.getUserIdFromToken(roomInfo.getToken());
+    public void joinRooms(@Header("token") String token, RoomInfo roomInfo) {
+        String userId = jwtTokenProvider.getUserIdFromToken(token);
         ChatRoom chatRoom = chatRoomRepository.findRoomById(roomInfo.getRoomId());
-        if (chatRoom != null) {
-            chatRoom.addMembers(userId);
-            messageSendingOperations.convertAndSend("/sub/chat/rooms", new RoomList(MessageType.ROOM_JOIN, chatRoom, chatRoomRepository.findAllRoom()));
+
+        if (chatRoom == null) {
+            return;
         }
+
+        if(chatRoom.getMemberIds().stream().anyMatch(mId -> mId.equals(userId))) {
+            return;
+        }
+
+        chatRoom.addMembers(userId);
+        messageSendingOperations.convertAndSend("/sub/chat/rooms", new RoomList(MessageType.ROOM_JOIN, chatRoom, chatRoomRepository.findAllRoom()));
     }
 
     @MessageMapping("/chat/rooms/leave")
-    public void leaveRooms(RoomInfo roomInfo) {
-        String userId = jwtTokenProvider.getUserIdFromToken(roomInfo.getToken());
+    public void leaveRooms(@Header("token") String token, RoomInfo roomInfo) {
+        String userId = jwtTokenProvider.getUserIdFromToken(token);
         ChatRoom chatRoom = chatRoomRepository.findRoomById(roomInfo.getRoomId());
-        if (chatRoom != null) {
-            chatRoom.leaveMembers(userId);
-            if(chatRoom.getMemberIds().isEmpty()) {
-                chatRoomRepository.deleteChatRoom(chatRoom.getId());
-            }
-            messageSendingOperations.convertAndSend("/sub/chat/rooms", new RoomList(MessageType.ROOM_LEAVE, chatRoom, chatRoomRepository.findAllRoom()));
+
+        if (chatRoom == null) {
+            return;
         }
+
+        if(chatRoom.getMemberIds().stream().noneMatch(mId -> mId.equals(userId))) {
+            return;
+        }
+
+        chatRoom.leaveMembers(userId);
+        if(chatRoom.getMemberIds().isEmpty()) {
+            chatRoomRepository.deleteChatRoom(chatRoom.getId());
+        }
+        messageSendingOperations.convertAndSend("/sub/chat/rooms", new RoomList(MessageType.ROOM_LEAVE, chatRoom, chatRoomRepository.findAllRoom()));
     }
 }

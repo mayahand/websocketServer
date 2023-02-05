@@ -72,12 +72,14 @@ export class ChatComponent implements OnInit, AfterViewChecked{
     const socket = new SockJS(environment.chatApiDomain+'/ws-stomp');
     _this.stompClient = Stomp.over(socket);
     _this.stompClient.connect({token:token}, () => {
-      _this.stompClient.subscribe('/sub/chat/message/'+token, function (data) {
+      _this.stompClient.subscribe('/sub/chat/message/'+this.userId, function (data) {
         let message = JSON.parse(data.body);
         _this.roomList.filter((room: ChatRoom) => room.id === message.chatRoom.id).forEach((room: ChatRoom) => {
           room.messages.push(message);
           _this.markRead();
         });
+      }, {
+        token: token
       });
 
       _this.stompClient.subscribe('/sub/chat/rooms', function (data) {
@@ -133,6 +135,8 @@ export class ChatComponent implements OnInit, AfterViewChecked{
             chatRoom.checkMember(_this.userId);
             _this.roomList.push(chatRoom);
           });
+      }, {
+        token: token
       });
 
       _this.stompClient.send('/pub/chat/rooms', {token:this.token});
@@ -140,15 +144,15 @@ export class ChatComponent implements OnInit, AfterViewChecked{
   }
 
   joinRoom(roomId: string) {
-    this.stompClient.send('/pub/chat/rooms/join', {}, JSON.stringify({roomId:roomId, token:this.token}));
+    this.stompClient.send('/pub/chat/rooms/join', {token:this.token}, JSON.stringify({roomId:roomId}));
   }
 
   leaveRoom(roomId: string) {
-    this.stompClient.send('/pub/chat/rooms/leave', {}, JSON.stringify({roomId:roomId, token:this.token}));
+    this.stompClient.send('/pub/chat/rooms/leave', {token:this.token}, JSON.stringify({roomId:roomId}));
   }
 
   createRoom(roomName: string) {
-    this.stompClient.send("/pub/chat/rooms/new", {}, JSON.stringify({roomName:roomName, token:this.token}));
+    this.stompClient.send("/pub/chat/rooms/new", {token:this.token}, JSON.stringify({roomName:roomName}));
   }
 
   sendMessage(roomId: string | undefined, message: string) {
@@ -160,7 +164,7 @@ export class ChatComponent implements OnInit, AfterViewChecked{
     if(!this.message) {
       return;
     }
-    this.stompClient.send('/pub/chat/message', {}, JSON.stringify({roomId:roomId, token:this.token, message:message}));
+    this.stompClient.send('/pub/chat/message', {token:this.token}, JSON.stringify({roomId:roomId, message:message}));
     this.message = '';
   }
 

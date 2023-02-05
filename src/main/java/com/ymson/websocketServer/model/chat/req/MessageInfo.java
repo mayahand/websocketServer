@@ -5,6 +5,5 @@ import lombok.Data;
 @Data
 public class MessageInfo {
     private String roomId;
-    private String token;
     private String message;
 }

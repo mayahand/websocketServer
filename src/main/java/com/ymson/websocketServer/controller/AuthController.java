@@ -2,8 +2,8 @@ package com.ymson.websocketServer.controller;
 
 import com.ymson.websocketServer.model.auth.Token;
 import com.ymson.websocketServer.model.user.User;
-import com.ymson.websocketServer.repository.TokenRepository;
 import com.ymson.websocketServer.repository.UserRepository;
+import com.ymson.websocketServer.utils.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +18,8 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
+    private final JwtTokenProvider provider;
 
     @PostMapping("/token")
     @ResponseBody
@@ -33,7 +33,7 @@ public class AuthController {
             return null;
         }
 
-        Token token = new Token(tokenRepository.createToken(userId));
+        Token token = new Token(provider.generateToken(userId));
 
         response.addCookie(new Cookie("token", token.getValue()));
         return token;

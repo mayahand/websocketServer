@@ -23,7 +23,7 @@
       <div *ngIf="!!currentChatRoom" class="container-sm" style="text-align: left;height: 100%">
         <h2 style="width: 100%;border-bottom: 2px solid gray">{{currentChatRoom.name}}</h2>
         <ul #messageScroller class="list-group" style="height: 500px;max-height: 500px;overflow-y: scroll">
-          <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let msg of currentChatRoom.messages"><b>{{msg.userId}}:</b> {{msg.data}}</li>
+          <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let msg of currentChatRoom.messages"><b>{{msg.userName}}({{msg.userId}}):</b> {{msg.data}}</li>
         </ul>
         <br/>
         <div style="width: 100%;text-align: center">

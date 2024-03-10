@@ -11,10 +11,12 @@ import lombok.EqualsAndHashCode;
 public class TextMessage extends Message<String> {
     private ChatRoom chatRoom;
     private String userId;
+    private String userName;
 
-    public TextMessage(ChatRoom chatRoom, String userId, String msg) {
+    public TextMessage(ChatRoom chatRoom, String userId, String userName, String msg) {
         super(MessageType.MESSAGE_SEND, msg);
         this.chatRoom = chatRoom;
         this.userId = userId;
+        this.userName = userName;
     }
 }

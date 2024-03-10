@@ -207,6 +207,7 @@ class ChatRoom {
 
 class Message {
   userId: string;
+  userName: string;
   chatRoom: ChatRoom;
   data: any;
   isRead: boolean = false;
